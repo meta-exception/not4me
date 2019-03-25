@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "esnext",
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "baseUrl": ".",
+        "paths": {
+          "~/*": ["./*"],
+          "@/*": ["src/*"],
+          "assets": ["src/assets/*"],
+          "components": ["src/components/*"],
+          "layouts": ["src/layouts/*"],
+          "pages": ["src/pages/*"],
+          "plugins": ["src/plugins/*"],
+          "variables": ["/.quasar/variables.styl"],
+        },
+        "types": [
+            "node"
+        ],
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "sourceMap": true,
+        "strict": true,
+        "strictNullChecks": true,
+    },
+    "include": [
+		  "src/**/*.ts",
+		  "src/**/*.vue",
+		  "test/**/*.ts"
+	  ],
+	  "exclude": [
+		  ".quasar",
+		  "dist",
+		  "node_modules"
+	  ],
+}
