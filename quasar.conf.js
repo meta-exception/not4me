@@ -36,7 +36,7 @@ module.exports = function (ctx) {
 
     extras: [
       'roboto-font',
-      // 'material-icons'
+      'material-icons',
       // 'ionicons-v4',
       'mdi-v3',
       // 'fontawesome-v5',
@@ -63,7 +63,8 @@ module.exports = function (ctx) {
         'QItemSection',
         'QItemLabel',
         'QInput',
-        'QSeparator'
+        'QSeparator',
+        'QScrollArea'
       ],
 
       directives: [

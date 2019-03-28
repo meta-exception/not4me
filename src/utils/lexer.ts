@@ -1,6 +1,9 @@
-import { isBorders, isColor, isDigit, isEOL, isFunction, isInteger, isLabel, isLetter, isNewLine, isReal, isReservedSymbol, isSP, isVariable, isWhitespace} from './helpers';
+import {
+  isBorder, isDigit, isEndJob, isEOL, isFunction, isInteger, isLetter, isNewLine,
+  isReal, isReservedSymbol, isType, isValid, isVariable, isWhitespace,
+} from './helpers';
 
-import { IToken } from './token';
+import { IToken } from './model';
 
 export class Lexer {
   private input: string;
@@ -21,9 +24,10 @@ export class Lexer {
     this.lineCounter = 0;
   }
 
-  public getTokens() {
+  public getTokens(): Array<IToken | undefined> {
     const tokens = [];
     let word = this.getNextLexeme();
+    console.log('word', word);
     tokens.push(word);
     while (word && word.type !== 'EOL') {
       word = this.getNextLexeme();
@@ -33,7 +37,7 @@ export class Lexer {
     return tokens;
   }
 
-  private getNextLexeme(): any {
+  private getNextLexeme(): IToken | undefined {
     const currentChar = this.input.charAt(this.lexemePtr);
     if (isWhitespace(currentChar)) {
       if (isNewLine(currentChar)) {
@@ -43,13 +47,13 @@ export class Lexer {
       this.lexemePtr++;
       return this.getNextLexeme();
     } else if (isEOL(currentChar)) {
-      return this.createLexeme('EOL');
+      return this.createLexeme('EOL', '');
     } else {
       return this.getLexeme();
     }
   }
 
-  private getLexeme() {
+  private getLexeme(): IToken | undefined {
     // now `lexemePtr` point out to start of lexeme
     this.lookaheadPtr = this.lexemePtr + 1;
 
@@ -58,29 +62,35 @@ export class Lexer {
       const lookaheadChar = this.input.charAt(this.lookaheadPtr);
 
       if (isReservedSymbol(currentLexeme)) {
-        const lexeme = this.createLexeme(currentLexeme);
+        const lexeme = this.createLexeme(currentLexeme, currentLexeme);
         this.lexemePtr = this.lookaheadPtr;
         return lexeme;
-      } else if (isSP(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar)) {
-          const lexeme = (currentLexeme === 's') ?
-            this.createLexeme('Square', currentLexeme) :
-            this.createLexeme('Perimeter', currentLexeme);
+      } else if (isEndJob(currentLexeme)) {
+        if (isWhitespace(lookaheadChar)) {
+          const lexeme = this.createLexeme('EndOfJob', currentLexeme);
           this.lexemePtr = this.lookaheadPtr;
           return lexeme;
         } else {
           this.lookaheadPtr++;
         }
-      } else if (isBorders(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || isDigit(lookaheadChar)) {
+      } else if (isBorder(currentLexeme)) {
+        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || !isValid(lookaheadChar) || isDigit(lookaheadChar)) {
           const lexeme = this.createLexeme('Border', currentLexeme);
           this.lexemePtr = this.lookaheadPtr;
           return lexeme;
         } else {
           this.lookaheadPtr++;
         }
+      } else if (isType(currentLexeme)) {
+        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || !isValid(lookaheadChar) || isDigit(lookaheadChar)) {
+          const lexeme = this.createLexeme('Type', currentLexeme);
+          this.lexemePtr = this.lookaheadPtr;
+          return lexeme;
+        } else {
+          this.lookaheadPtr++;
+        }
       } else if (isInteger(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || isLetter(lookaheadChar)) {
+        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || !isValid(lookaheadChar) || isLetter(lookaheadChar)) {
           const lexeme = this.createLexeme('Integer', currentLexeme);
           this.lexemePtr = this.lookaheadPtr;
           return lexeme;
@@ -88,31 +98,15 @@ export class Lexer {
           this.lookaheadPtr++;
         }
       } else if (isReal(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || isLetter(lookaheadChar)) {
+        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || !isValid(lookaheadChar) || isLetter(lookaheadChar)) {
           const lexeme = this.createLexeme('Real', currentLexeme);
           this.lexemePtr = this.lookaheadPtr;
           return lexeme;
         } else {
           this.lookaheadPtr++;
         }
-      } else if (isLabel(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || isDigit(lookaheadChar)) {
-          const lexeme = this.createLexeme('Label', currentLexeme);
-          this.lexemePtr = this.lookaheadPtr;
-          return lexeme;
-        } else {
-          this.lookaheadPtr++;
-        }
-      } else if (isColor(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || isDigit(lookaheadChar)) {
-          const lexeme = this.createLexeme('Color', currentLexeme);
-          this.lexemePtr = this.lookaheadPtr;
-          return lexeme;
-        } else {
-          this.lookaheadPtr++;
-        }
       } else if (isFunction(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || isDigit(lookaheadChar)) {
+        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || !isValid(lookaheadChar) || isDigit(lookaheadChar)) {
           const lexeme = this.createLexeme('Function', currentLexeme);
           this.lexemePtr = this.lookaheadPtr;
           return lexeme;
@@ -120,23 +114,27 @@ export class Lexer {
           this.lookaheadPtr++;
         }
       } else if (isVariable(currentLexeme)) {
-        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar)) {
+        if (isWhitespace(lookaheadChar) || isEOL(lookaheadChar) || isReservedSymbol(lookaheadChar) || !isValid(lookaheadChar)) {
           const lexeme = this.createLexeme('Variable', currentLexeme);
           this.lexemePtr = this.lookaheadPtr;
           return lexeme;
         } else {
           this.lookaheadPtr++;
         }
+      } else if (!isValid(currentLexeme)) {
+        const lexeme = this.createLexeme('Unknown', currentLexeme);
+        this.lexemePtr = this.lookaheadPtr;
+        return lexeme;
       } else {
         this.lookaheadPtr++;
       }
     }
   }
 
-  private createLexeme(type: string, value?: string): IToken {
+  private createLexeme(type: string, lexeme: string): IToken {
     return {
       type,
-      value,
+      lexeme,
       token: {
         start: this.lexemePtr,
         end: this.lookaheadPtr,

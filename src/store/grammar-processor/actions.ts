@@ -4,6 +4,7 @@ import { State as RootState } from '../state';
 import { GrammarProcessorState as State } from './state';
 
 import { Lexer } from '@/utils/lexer';
+import { INode, INodeError } from '@/utils/model';
 import { Parser } from '@/utils/parser';
 
 const actions: ActionTree<State, RootState> = {
@@ -17,8 +18,19 @@ const actions: ActionTree<State, RootState> = {
     console.log('tokens:', state.tokens);
 
     const par = new Parser(state.tokens);
-    const ast = par.getAST();
-    console.log('AST:', ast);
+    const astOrErr = par.getAST();
+    if (astOrErr) {
+      const { error } = (astOrErr as INodeError);
+      if (error) {
+        commit(mutate.SET_ERROR, error);
+        console.error(state.error);
+      } else {
+        commit(mutate.SET_AST, astOrErr);
+        console.log('AST:', state.ast);
+        const output = (state.ast as INode).value;
+        commit(mutate.SET_OUTPUT, output);
+      }
+    }
   },
 };
 
